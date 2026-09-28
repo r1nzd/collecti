@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../modules/collecti_module.dart';
 import 'theme.dart';
 

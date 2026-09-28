@@ -1,6 +1,4 @@
-//! Container I/O dùng chung cho 6 định dạng (.awce .apce .atce .arce .acce .adce).
-//! Cấu trúc: ZIP nén ZSTD gồm `manifest.json` + `content.json` (+ tài nguyên nhúng sau này).
-use anyhow::{bail, Context, Result};
+﻿use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use std::{
     fs::{self, File},
@@ -55,7 +53,6 @@ pub struct Manifest {
     pub created_at: u64,
 }
 
-/// Ghi nguyên tử: ghi ra file .tmp rồi rename, tránh hỏng file khi mất điện/crash.
 pub fn write_container(path: &Path, kind: DocKind, content: &[u8]) -> Result<()> {
     let manifest = Manifest {
         format_version: FORMAT_VERSION,

@@ -1,12 +1,10 @@
-//! Bề mặt API được flutter_rust_bridge sinh binding sang Dart.
-use crate::io::{self, DocKind};
+﻿use crate::io::{self, DocKind};
 use std::path::Path;
 
 pub fn app_version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
 
-/// Tạo tài liệu rỗng ở `path` (đuôi file nên khớp `kind`).
 pub fn create_document(path: String, kind: DocKind) -> anyhow::Result<()> {
     io::write_container(Path::new(&path), kind, b"{}")
 }
