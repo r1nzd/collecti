@@ -1,0 +1,23 @@
+name: collecti
+description: Bộ ứng dụng văn phòng & sáng tạo All-in-One, Local-First.
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  collecti_native:
+    path: rust_builder
+  flutter:
+    sdk: flutter
+  flutter_bloc: ^8.1.6
+  flutter_rust_bridge: ^2.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
