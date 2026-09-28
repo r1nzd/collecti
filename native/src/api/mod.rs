@@ -1,4 +1,4 @@
-﻿use crate::io::{self, DocKind};
+use crate::io::{self, DocKind};
 use std::path::Path;
 
 pub fn app_version() -> String {

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'src/app/app.dart';
 import 'src/bridge/frb_generated.dart';
 
