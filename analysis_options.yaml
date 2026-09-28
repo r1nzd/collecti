@@ -2,6 +2,7 @@ include: package:flutter_lints/flutter.yaml
 analyzer:
   exclude:
     - lib/src/bridge/**
+    - rust_builder/**
     - build/**
     - windows/**
     - linux/**
