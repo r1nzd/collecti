@@ -69,7 +69,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 663682147;
+  int get rustContentHash => 920147161;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -86,7 +86,19 @@ abstract class RustLibApi extends BaseApi {
   Future<void> crateApiCreateDocument(
       {required String path, required DocKind kind});
 
+  Future<String> crateApiGetCellInput(
+      {required int sheetIndex, required int row, required int col});
+
+  Future<List<CellSnapshot>> crateApiGetSheetSnapshot(
+      {required int sheetIndex});
+
   Future<DocKind> crateApiReadDocumentKind({required String path});
+
+  Future<List<CellSnapshot>> crateApiSetCellInput(
+      {required int sheetIndex,
+      required int row,
+      required int col,
+      required String input});
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -147,13 +159,65 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<String> crateApiGetCellInput(
+      {required int sheetIndex, required int row, required int col}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_u_32(sheetIndex, serializer);
+        sse_encode_u_32(row, serializer);
+        sse_encode_u_32(col, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 3, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiGetCellInputConstMeta,
+      argValues: [sheetIndex, row, col],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiGetCellInputConstMeta => const TaskConstMeta(
+        debugName: "get_cell_input",
+        argNames: ["sheetIndex", "row", "col"],
+      );
+
+  @override
+  Future<List<CellSnapshot>> crateApiGetSheetSnapshot(
+      {required int sheetIndex}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_u_32(sheetIndex, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 4, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_cell_snapshot,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiGetSheetSnapshotConstMeta,
+      argValues: [sheetIndex],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiGetSheetSnapshotConstMeta => const TaskConstMeta(
+        debugName: "get_sheet_snapshot",
+        argNames: ["sheetIndex"],
+      );
+
+  @override
   Future<DocKind> crateApiReadDocumentKind({required String path}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(path, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 3, port: port_);
+            funcId: 5, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_doc_kind,
@@ -170,6 +234,37 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         argNames: ["path"],
       );
 
+  @override
+  Future<List<CellSnapshot>> crateApiSetCellInput(
+      {required int sheetIndex,
+      required int row,
+      required int col,
+      required String input}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_u_32(sheetIndex, serializer);
+        sse_encode_u_32(row, serializer);
+        sse_encode_u_32(col, serializer);
+        sse_encode_String(input, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 6, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_cell_snapshot,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiSetCellInputConstMeta,
+      argValues: [sheetIndex, row, col, input],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiSetCellInputConstMeta => const TaskConstMeta(
+        debugName: "set_cell_input",
+        argNames: ["sheetIndex", "row", "col", "input"],
+      );
+
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -180,6 +275,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   String dco_decode_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as String;
+  }
+
+  @protected
+  bool dco_decode_bool(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as bool;
+  }
+
+  @protected
+  CellSnapshot dco_decode_cell_snapshot(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return CellSnapshot(
+      row: dco_decode_u_32(arr[0]),
+      col: dco_decode_u_32(arr[1]),
+      display: dco_decode_String(arr[2]),
+      isError: dco_decode_bool(arr[3]),
+    );
   }
 
   @protected
@@ -195,9 +310,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<CellSnapshot> dco_decode_list_cell_snapshot(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_cell_snapshot).toList();
+  }
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as Uint8List;
+  }
+
+  @protected
+  int dco_decode_u_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
   }
 
   @protected
@@ -227,6 +354,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool sse_decode_bool(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint8() != 0;
+  }
+
+  @protected
+  CellSnapshot sse_decode_cell_snapshot(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_row = sse_decode_u_32(deserializer);
+    var var_col = sse_decode_u_32(deserializer);
+    var var_display = sse_decode_String(deserializer);
+    var var_isError = sse_decode_bool(deserializer);
+    return CellSnapshot(
+        row: var_row, col: var_col, display: var_display, isError: var_isError);
+  }
+
+  @protected
   DocKind sse_decode_doc_kind(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var inner = sse_decode_i_32(deserializer);
@@ -240,10 +384,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<CellSnapshot> sse_decode_list_cell_snapshot(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <CellSnapshot>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_cell_snapshot(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
     return deserializer.buffer.getUint8List(len_);
+  }
+
+  @protected
+  int sse_decode_u_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint32();
   }
 
   @protected
@@ -255,12 +418,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_decode_unit(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-  }
-
-  @protected
-  bool sse_decode_bool(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getUint8() != 0;
   }
 
   @protected
@@ -277,6 +434,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_bool(bool self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint8(self ? 1 : 0);
+  }
+
+  @protected
+  void sse_encode_cell_snapshot(CellSnapshot self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_32(self.row, serializer);
+    sse_encode_u_32(self.col, serializer);
+    sse_encode_String(self.display, serializer);
+    sse_encode_bool(self.isError, serializer);
+  }
+
+  @protected
   void sse_encode_doc_kind(DocKind self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.index, serializer);
@@ -289,11 +461,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_cell_snapshot(
+      List<CellSnapshot> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_cell_snapshot(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_prim_u_8_strict(
       Uint8List self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     serializer.buffer.putUint8List(self);
+  }
+
+  @protected
+  void sse_encode_u_32(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint32(self);
   }
 
   @protected
@@ -305,11 +493,5 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_unit(void self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-  }
-
-  @protected
-  void sse_encode_bool(bool self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putUint8(self ? 1 : 0);
   }
 }

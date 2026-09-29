@@ -7,6 +7,9 @@ import 'frb_generated.dart';
 import 'io.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+// These functions are ignored because they are not marked as `pub`: `cell_snapshot`, `format_number`, `recompute_formulas`, `with_workbook`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `fmt`
+
 Future<String> appVersion() => RustLib.instance.api.crateApiAppVersion();
 
 Future<void> createDocument({required String path, required DocKind kind}) =>
@@ -14,3 +17,47 @@ Future<void> createDocument({required String path, required DocKind kind}) =>
 
 Future<DocKind> readDocumentKind({required String path}) =>
     RustLib.instance.api.crateApiReadDocumentKind(path: path);
+
+Future<List<CellSnapshot>> setCellInput(
+        {required int sheetIndex,
+        required int row,
+        required int col,
+        required String input}) =>
+    RustLib.instance.api.crateApiSetCellInput(
+        sheetIndex: sheetIndex, row: row, col: col, input: input);
+
+Future<List<CellSnapshot>> getSheetSnapshot({required int sheetIndex}) =>
+    RustLib.instance.api.crateApiGetSheetSnapshot(sheetIndex: sheetIndex);
+
+Future<String> getCellInput(
+        {required int sheetIndex, required int row, required int col}) =>
+    RustLib.instance.api
+        .crateApiGetCellInput(sheetIndex: sheetIndex, row: row, col: col);
+
+class CellSnapshot {
+  final int row;
+  final int col;
+  final String display;
+  final bool isError;
+
+  const CellSnapshot({
+    required this.row,
+    required this.col,
+    required this.display,
+    required this.isError,
+  });
+
+  @override
+  int get hashCode =>
+      row.hashCode ^ col.hashCode ^ display.hashCode ^ isError.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CellSnapshot &&
+          runtimeType == other.runtimeType &&
+          row == other.row &&
+          col == other.col &&
+          display == other.display &&
+          isError == other.isError;
+}
