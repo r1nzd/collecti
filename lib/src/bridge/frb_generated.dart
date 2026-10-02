@@ -4,6 +4,7 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'api.dart';
+import 'api/documents.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
@@ -69,7 +70,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 920147161;
+  int get rustContentHash => 643608630;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -86,19 +87,34 @@ abstract class RustLibApi extends BaseApi {
   Future<void> crateApiCreateDocument(
       {required String path, required DocKind kind});
 
+  Future<DocumentEntry> crateApiDocumentsCreateDocumentEntry(
+      {required String dir, required String name, required String ext});
+
+  Future<void> crateApiDocumentsDeleteDocumentEntry(
+      {required String dir, required String id});
+
   Future<String> crateApiGetCellInput(
       {required int sheetIndex, required int row, required int col});
 
   Future<List<CellSnapshot>> crateApiGetSheetSnapshot(
       {required int sheetIndex});
 
+  Future<List<DocumentEntry>> crateApiDocumentsListDocuments(
+      {required String dir});
+
   Future<DocKind> crateApiReadDocumentKind({required String path});
+
+  Future<void> crateApiDocumentsRenameDocumentEntry(
+      {required String dir, required String id, required String newName});
 
   Future<List<CellSnapshot>> crateApiSetCellInput(
       {required int sheetIndex,
       required int row,
       required int col,
       required String input});
+
+  Future<bool> crateApiDocumentsTogglePinDocument(
+      {required String dir, required String id});
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -159,6 +175,61 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<DocumentEntry> crateApiDocumentsCreateDocumentEntry(
+      {required String dir, required String name, required String ext}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(dir, serializer);
+        sse_encode_String(name, serializer);
+        sse_encode_String(ext, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 3, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_document_entry,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiDocumentsCreateDocumentEntryConstMeta,
+      argValues: [dir, name, ext],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiDocumentsCreateDocumentEntryConstMeta =>
+      const TaskConstMeta(
+        debugName: "create_document_entry",
+        argNames: ["dir", "name", "ext"],
+      );
+
+  @override
+  Future<void> crateApiDocumentsDeleteDocumentEntry(
+      {required String dir, required String id}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(dir, serializer);
+        sse_encode_String(id, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 4, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiDocumentsDeleteDocumentEntryConstMeta,
+      argValues: [dir, id],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiDocumentsDeleteDocumentEntryConstMeta =>
+      const TaskConstMeta(
+        debugName: "delete_document_entry",
+        argNames: ["dir", "id"],
+      );
+
+  @override
   Future<String> crateApiGetCellInput(
       {required int sheetIndex, required int row, required int col}) {
     return handler.executeNormal(NormalTask(
@@ -168,7 +239,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_u_32(row, serializer);
         sse_encode_u_32(col, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 3, port: port_);
+            funcId: 5, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -193,7 +264,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_u_32(sheetIndex, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 4, port: port_);
+            funcId: 6, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_cell_snapshot,
@@ -211,13 +282,39 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<List<DocumentEntry>> crateApiDocumentsListDocuments(
+      {required String dir}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(dir, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 7, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_document_entry,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiDocumentsListDocumentsConstMeta,
+      argValues: [dir],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiDocumentsListDocumentsConstMeta =>
+      const TaskConstMeta(
+        debugName: "list_documents",
+        argNames: ["dir"],
+      );
+
+  @override
   Future<DocKind> crateApiReadDocumentKind({required String path}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(path, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 5, port: port_);
+            funcId: 8, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_doc_kind,
@@ -235,6 +332,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<void> crateApiDocumentsRenameDocumentEntry(
+      {required String dir, required String id, required String newName}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(dir, serializer);
+        sse_encode_String(id, serializer);
+        sse_encode_String(newName, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 9, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiDocumentsRenameDocumentEntryConstMeta,
+      argValues: [dir, id, newName],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiDocumentsRenameDocumentEntryConstMeta =>
+      const TaskConstMeta(
+        debugName: "rename_document_entry",
+        argNames: ["dir", "id", "newName"],
+      );
+
+  @override
   Future<List<CellSnapshot>> crateApiSetCellInput(
       {required int sheetIndex,
       required int row,
@@ -248,7 +373,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_u_32(col, serializer);
         sse_encode_String(input, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 6, port: port_);
+            funcId: 10, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_cell_snapshot,
@@ -263,6 +388,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiSetCellInputConstMeta => const TaskConstMeta(
         debugName: "set_cell_input",
         argNames: ["sheetIndex", "row", "col", "input"],
+      );
+
+  @override
+  Future<bool> crateApiDocumentsTogglePinDocument(
+      {required String dir, required String id}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(dir, serializer);
+        sse_encode_String(id, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 11, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_bool,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiDocumentsTogglePinDocumentConstMeta,
+      argValues: [dir, id],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiDocumentsTogglePinDocumentConstMeta =>
+      const TaskConstMeta(
+        debugName: "toggle_pin_document",
+        argNames: ["dir", "id"],
       );
 
   @protected
@@ -304,6 +456,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  DocumentEntry dco_decode_document_entry(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return DocumentEntry(
+      id: dco_decode_String(arr[0]),
+      name: dco_decode_String(arr[1]),
+      ext: dco_decode_String(arr[2]),
+      pinned: dco_decode_bool(arr[3]),
+      createdAt: dco_decode_u_64(arr[4]),
+      updatedAt: dco_decode_u_64(arr[5]),
+    );
+  }
+
+  @protected
   int dco_decode_i_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
@@ -316,6 +484,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<DocumentEntry> dco_decode_list_document_entry(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_document_entry).toList();
+  }
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as Uint8List;
@@ -325,6 +499,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   int dco_decode_u_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
+  }
+
+  @protected
+  BigInt dco_decode_u_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dcoDecodeU64(raw);
   }
 
   @protected
@@ -378,6 +558,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  DocumentEntry sse_decode_document_entry(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_id = sse_decode_String(deserializer);
+    var var_name = sse_decode_String(deserializer);
+    var var_ext = sse_decode_String(deserializer);
+    var var_pinned = sse_decode_bool(deserializer);
+    var var_createdAt = sse_decode_u_64(deserializer);
+    var var_updatedAt = sse_decode_u_64(deserializer);
+    return DocumentEntry(
+        id: var_id,
+        name: var_name,
+        ext: var_ext,
+        pinned: var_pinned,
+        createdAt: var_createdAt,
+        updatedAt: var_updatedAt);
+  }
+
+  @protected
   int sse_decode_i_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getInt32();
@@ -397,6 +595,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<DocumentEntry> sse_decode_list_document_entry(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <DocumentEntry>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_document_entry(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
@@ -407,6 +618,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   int sse_decode_u_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint32();
+  }
+
+  @protected
+  BigInt sse_decode_u_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getBigUint64();
   }
 
   @protected
@@ -455,6 +672,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_document_entry(DocumentEntry self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.id, serializer);
+    sse_encode_String(self.name, serializer);
+    sse_encode_String(self.ext, serializer);
+    sse_encode_bool(self.pinned, serializer);
+    sse_encode_u_64(self.createdAt, serializer);
+    sse_encode_u_64(self.updatedAt, serializer);
+  }
+
+  @protected
   void sse_encode_i_32(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putInt32(self);
@@ -471,6 +699,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_document_entry(
+      List<DocumentEntry> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_document_entry(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_prim_u_8_strict(
       Uint8List self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -482,6 +720,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_u_32(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putUint32(self);
+  }
+
+  @protected
+  void sse_encode_u_64(BigInt self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putBigUint64(self);
   }
 
   @protected

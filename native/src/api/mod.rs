@@ -1,3 +1,4 @@
+pub mod documents;
 use crate::io::{self, DocKind};
 use crate::model::{Cell, CellRef, CellValue, Workbook};
 use crate::engines::formula;

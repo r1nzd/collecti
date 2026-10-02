@@ -7,6 +7,7 @@
 // ignore_for_file: argument_type_not_assignable
 
 import 'api.dart';
+import 'api/documents.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
@@ -37,16 +38,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   DocKind dco_decode_doc_kind(dynamic raw);
 
   @protected
+  DocumentEntry dco_decode_document_entry(dynamic raw);
+
+  @protected
   int dco_decode_i_32(dynamic raw);
 
   @protected
   List<CellSnapshot> dco_decode_list_cell_snapshot(dynamic raw);
 
   @protected
+  List<DocumentEntry> dco_decode_list_document_entry(dynamic raw);
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
   int dco_decode_u_32(dynamic raw);
+
+  @protected
+  BigInt dco_decode_u_64(dynamic raw);
 
   @protected
   int dco_decode_u_8(dynamic raw);
@@ -70,6 +80,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   DocKind sse_decode_doc_kind(SseDeserializer deserializer);
 
   @protected
+  DocumentEntry sse_decode_document_entry(SseDeserializer deserializer);
+
+  @protected
   int sse_decode_i_32(SseDeserializer deserializer);
 
   @protected
@@ -77,10 +90,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       SseDeserializer deserializer);
 
   @protected
+  List<DocumentEntry> sse_decode_list_document_entry(
+      SseDeserializer deserializer);
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_32(SseDeserializer deserializer);
+
+  @protected
+  BigInt sse_decode_u_64(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_8(SseDeserializer deserializer);
@@ -105,6 +125,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_doc_kind(DocKind self, SseSerializer serializer);
 
   @protected
+  void sse_encode_document_entry(DocumentEntry self, SseSerializer serializer);
+
+  @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
 
   @protected
@@ -112,11 +135,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       List<CellSnapshot> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_document_entry(
+      List<DocumentEntry> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_prim_u_8_strict(
       Uint8List self, SseSerializer serializer);
 
   @protected
   void sse_encode_u_32(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_u_64(BigInt self, SseSerializer serializer);
 
   @protected
   void sse_encode_u_8(int self, SseSerializer serializer);
