@@ -8,7 +8,9 @@ const double kHeaderWidth = 48;
 const double kColWidth = 96;
 
 class TablePage extends StatefulWidget {
-  const TablePage({super.key});
+  const TablePage({super.key, this.filePath});
+
+  final String? filePath;
 
   @override
   State<TablePage> createState() => _TablePageState();
@@ -24,13 +26,31 @@ class _TablePageState extends State<TablePage> {
   @override
   void initState() {
     super.initState();
-    _loadSnapshot();
+    _init();
+  }
+
+  Future<void> _init() async {
+    final path = widget.filePath;
+    if (path != null) {
+      try {
+        await openWorkbook(path: path);
+      } catch (e) {
+        _showMessage('Không mở được bảng tính: $e');
+      }
+    }
+    await _loadSnapshot();
+  }
+
+  void _showMessage(String text) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 
   int _cellKey(int row, int col) => row * kVisibleCols + col;
 
   Future<void> _loadSnapshot() async {
     final snapshot = await getSheetSnapshot(sheetIndex: 0);
+    if (!mounted) return;
     setState(() {
       _cells.clear();
       for (final cell in snapshot) {
@@ -41,6 +61,7 @@ class _TablePageState extends State<TablePage> {
 
   Future<void> _selectCell(int row, int col) async {
     final input = await getCellInput(sheetIndex: 0, row: row, col: col);
+    if (!mounted) return;
     setState(() {
       _selectedRow = row;
       _selectedCol = col;
@@ -57,11 +78,20 @@ class _TablePageState extends State<TablePage> {
       col: _selectedCol!,
       input: _formulaBarController.text,
     );
+    if (!mounted) return;
     setState(() {
       for (final cell in result) {
         _cells[_cellKey(cell.row, cell.col)] = cell.display;
       }
     });
+    final path = widget.filePath;
+    if (path != null) {
+      try {
+        await saveWorkbook(path: path);
+      } catch (e) {
+        _showMessage('Không lưu được bảng tính: $e');
+      }
+    }
   }
 
   String _columnLabel(int col) {

@@ -5,9 +5,10 @@ import '../../bridge/api/documents.dart' as bridge;
 import '../collecti_module.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, required this.onOpenModule});
+  const HomePage({super.key, required this.onOpenModule, this.onOpenDocument});
 
   final void Function(CollectiModule module) onOpenModule;
+  final void Function(CollectiModule module, String path)? onOpenDocument;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -30,6 +31,16 @@ class _HomePageState extends State<HomePage> {
     final dir = Directory('${support.path}${Platform.pathSeparator}documents');
     _docsDir = dir.path;
     await _reload();
+  }
+
+  void _open(bridge.DocumentEntry doc) {
+    final module = _moduleFor(doc.ext);
+    final dir = _docsDir;
+    if (dir == null || widget.onOpenDocument == null) {
+      widget.onOpenModule(module);
+      return;
+    }
+    widget.onOpenDocument!(module, '$dir${Platform.pathSeparator}${doc.id}.${doc.ext}');
   }
 
   Future<void> _reload() async {
@@ -351,7 +362,7 @@ class _HomePageState extends State<HomePage> {
         itemBuilder: (context, i) {
           final doc = top5[i];
           return GestureDetector(
-            onTap: () => widget.onOpenModule(_moduleFor(doc.ext)),
+            onTap: () => _open(doc),
             child: Container(
               width: i == 0 ? 420 : 140,
               decoration: BoxDecoration(
@@ -389,7 +400,7 @@ class _HomePageState extends State<HomePage> {
     return SizedBox(
       width: 216,
       child: GestureDetector(
-        onTap: () => widget.onOpenModule(_moduleFor(doc.ext)),
+        onTap: () => _open(doc),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

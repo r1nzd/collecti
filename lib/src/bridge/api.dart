@@ -34,6 +34,12 @@ Future<String> getCellInput(
     RustLib.instance.api
         .crateApiGetCellInput(sheetIndex: sheetIndex, row: row, col: col);
 
+Future<void> openWorkbook({required String path}) =>
+    RustLib.instance.api.crateApiOpenWorkbook(path: path);
+
+Future<void> saveWorkbook({required String path}) =>
+    RustLib.instance.api.crateApiSaveWorkbook(path: path);
+
 class CellSnapshot {
   final int row;
   final int col;

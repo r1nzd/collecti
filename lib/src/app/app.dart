@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../modules/collecti_module.dart';
 import '../modules/home/home_page.dart';
+import '../modules/table/table_page.dart';
 import 'theme.dart';
 
 class CollectiApp extends StatelessWidget {
@@ -26,6 +27,7 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int _index = 0;
   bool _expanded = false;
+  String? _tablePath;
 
   static const _mods = CollectiModule.values;
 
@@ -33,12 +35,25 @@ class _HomeShellState extends State<HomeShell> {
     setState(() => _index = module.index + 1);
   }
 
+  void _openDocument(CollectiModule module, String path) {
+    setState(() {
+      if (module == CollectiModule.table) {
+        _tablePath = path;
+      }
+      _index = module.index + 1;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final pages = <Widget>[
-      HomePage(onOpenModule: _openModule),
-      for (final m in _mods) m.page,
+      HomePage(onOpenModule: _openModule, onOpenDocument: _openDocument),
+      for (final m in _mods)
+        if (m == CollectiModule.table)
+          TablePage(key: ValueKey(_tablePath), filePath: _tablePath)
+        else
+          m.page,
     ];
 
     return Scaffold(
