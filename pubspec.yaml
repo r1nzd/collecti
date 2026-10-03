@@ -22,3 +22,15 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  fonts:
+    - family: GoogleSansFlex
+      fonts:
+        - asset: assets/fonts/GoogleSansFlex-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/GoogleSansFlex-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/GoogleSansFlex-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/GoogleSansFlex-Bold.ttf
+          weight: 700

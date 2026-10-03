@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../bridge/api/documents.dart' as bridge;
 import '../collecti_module.dart';
+import 'document_events.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, required this.onOpenModule, this.onOpenDocument});
+  const HomePage({super.key, required this.onOpenModule, this.onOpenDocument, this.lockedExt});
 
   final void Function(CollectiModule module) onOpenModule;
   final void Function(CollectiModule module, String path)? onOpenDocument;
+  final String? lockedExt;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -23,7 +25,24 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    _chipFilter = widget.lockedExt;
+    documentsRevision.addListener(_onDocumentsChanged);
     _init();
+  }
+
+  void _onDocumentsChanged() {
+    _reload();
+  }
+
+  Future<void> _reloadAndNotify() async {
+    await _reload();
+    documentsRevision.value++;
+  }
+
+  @override
+  void dispose() {
+    documentsRevision.removeListener(_onDocumentsChanged);
+    super.dispose();
   }
 
   Future<void> _init() async {
@@ -46,6 +65,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _reload() async {
     if (_docsDir == null) return;
     final docs = await bridge.listDocuments(dir: _docsDir!);
+    if (!mounted) return;
     setState(() => _docs = docs);
   }
 
@@ -99,7 +119,7 @@ class _HomePageState extends State<HomePage> {
                 initialValue: ext,
                 decoration: const InputDecoration(labelText: 'Loại tài liệu'),
                 items: [
-                  for (final m in CollectiModule.values)
+                  for (final m in CollectiModule.values.where((m) => widget.lockedExt == null || m.extension == widget.lockedExt))
                     DropdownMenuItem(value: m.extension, child: Text(m.label)),
                 ],
                 onChanged: (v) => setDialogState(() => ext = v ?? ext),
@@ -120,7 +140,7 @@ class _HomePageState extends State<HomePage> {
         name: nameController.text.trim(),
         ext: ext,
       );
-      await _reload();
+      await _reloadAndNotify();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Đã tạo "${nameController.text.trim()}"')),
@@ -145,14 +165,14 @@ class _HomePageState extends State<HomePage> {
     );
     if (renamed == true && controller.text.trim().isNotEmpty && _docsDir != null) {
       await bridge.renameDocumentEntry(dir: _docsDir!, id: doc.id, newName: controller.text.trim());
-      await _reload();
+      await _reloadAndNotify();
     }
   }
 
   Future<void> _togglePin(bridge.DocumentEntry doc) async {
     if (_docsDir == null) return;
     await bridge.togglePinDocument(dir: _docsDir!, id: doc.id);
-    await _reload();
+    await _reloadAndNotify();
   }
 
   Future<void> _delete(bridge.DocumentEntry doc) async {
@@ -174,7 +194,7 @@ class _HomePageState extends State<HomePage> {
     );
     if (confirmed != true) return;
     await bridge.deleteDocumentEntry(dir: _docsDir!, id: doc.id);
-    await _reload();
+    await _reloadAndNotify();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -255,6 +275,7 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
+            if (widget.lockedExt == null)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: SizedBox(
@@ -281,7 +302,7 @@ class _HomePageState extends State<HomePage> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(24, 16, 24, 96),
                 children: [
-                  _buildCarousel(theme, featured),
+                  if (widget.lockedExt == null) _buildCarousel(theme, featured),
                   if (pinned.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     Text('Pinned', style: theme.textTheme.headlineSmall),
