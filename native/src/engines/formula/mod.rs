@@ -32,7 +32,7 @@ fn tokenize(src: &str) -> Result<Vec<Token>, String> {
                     i += 1;
                 }
                 let text: String = chars[start..i].iter().collect();
-                let n: f64 = text.parse().map_err(|_| format!("Số không hợp lệ: {text}"))?;
+                let n: f64 = text.parse().map_err(|_| format!("Invalid number: {text}"))?;
                 tokens.push(Token::Number(n));
             }
             'A'..='Z' | 'a'..='z' => {
@@ -46,17 +46,17 @@ fn tokenize(src: &str) -> Result<Vec<Token>, String> {
                     i += 1;
                 }
                 if row_start == i {
-                    return Err(format!("Tham chiếu ô không hợp lệ gần vị trí {start}"));
+                    return Err(format!("Invalid cell reference near position {start}"));
                 }
                 let row_text: String = chars[row_start..i].iter().collect();
                 let col = column_letters_to_index(&col_text)?;
-                let row: u32 = row_text.parse().map_err(|_| format!("Số dòng không hợp lệ: {row_text}"))?;
+                let row: u32 = row_text.parse().map_err(|_| format!("Invalid row number: {row_text}"))?;
                 if row == 0 {
-                    return Err("Số dòng phải bắt đầu từ 1".to_string());
+                    return Err("Row numbers start at 1".to_string());
                 }
                 tokens.push(Token::Cell(CellRef::new(row - 1, col)));
             }
-            _ => return Err(format!("Ký tự không hợp lệ: {c}")),
+            _ => return Err(format!("Invalid character: {c}")),
         }
     }
     Ok(tokens)
@@ -66,12 +66,12 @@ fn column_letters_to_index(letters: &str) -> Result<u32, String> {
     let mut idx: u32 = 0;
     for c in letters.chars() {
         if !c.is_ascii_alphabetic() {
-            return Err(format!("Ký tự cột không hợp lệ: {c}"));
+            return Err(format!("Invalid column character: {c}"));
         }
         idx = idx * 26 + (c.to_ascii_uppercase() as u32 - 'A' as u32 + 1);
     }
     if idx == 0 {
-        return Err("Thiếu tên cột".to_string());
+        return Err("Missing column name".to_string());
     }
     Ok(idx - 1)
 }
@@ -117,7 +117,7 @@ impl<'a> Parser<'a> {
                     self.next();
                     let rhs = self.parse_factor(sheet)?;
                     if rhs == 0.0 {
-                        return Err("Chia cho 0".to_string());
+                        return Err("Division by zero".to_string());
                     }
                     left /= rhs;
                 }
@@ -136,10 +136,10 @@ impl<'a> Parser<'a> {
                 let v = self.parse_expr(sheet)?;
                 match self.next() {
                     Some(Token::RParen) => Ok(v),
-                    _ => Err("Thiếu dấu ')'".to_string()),
+                    _ => Err("Missing ')'".to_string()),
                 }
             }
-            other => Err(format!("Biểu thức không hợp lệ tại: {other:?}")),
+            other => Err(format!("Invalid expression at: {other:?}")),
         }
     }
 }
@@ -149,7 +149,7 @@ fn cell_to_number(cell: &Cell) -> Result<f64, String> {
         CellValue::Number(n) => Ok(*n),
         CellValue::Empty => Ok(0.0),
         CellValue::Boolean(b) => Ok(if *b { 1.0 } else { 0.0 }),
-        CellValue::Text(t) => Err(format!("Không thể dùng văn bản trong phép tính: {t}")),
+        CellValue::Text(t) => Err(format!("Text cannot be used in calculations: {t}")),
         CellValue::Error(e) => Err(e.clone()),
     }
 }
@@ -160,7 +160,7 @@ pub fn evaluate(formula: &str, sheet: &Sheet) -> CellValue {
         let mut parser = Parser::new(&tokens);
         let value = parser.parse_expr(sheet)?;
         if parser.pos != tokens.len() {
-            return Err("Dư ký tự ở cuối công thức".to_string());
+            return Err("Unexpected characters at end of formula".to_string());
         }
         Ok(value)
     });

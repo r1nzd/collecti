@@ -56,7 +56,7 @@ fn rand_u32() -> u32 {
 }
 
 fn doc_kind_from_ext(ext: &str) -> anyhow::Result<DocKind> {
-    DocKind::from_extension(ext).ok_or_else(|| anyhow::anyhow!("Duoi file khong hop le: {ext}"))
+    DocKind::from_extension(ext).ok_or_else(|| anyhow::anyhow!("Invalid file extension: {ext}"))
 }
 
 fn load_index(dir: &str) -> anyhow::Result<DocumentIndex> {
@@ -101,7 +101,7 @@ pub fn rename_document_entry(dir: String, id: String, new_name: String) -> anyho
         .entries
         .iter_mut()
         .find(|e| e.id == id)
-        .ok_or_else(|| anyhow::anyhow!("Khong tim thay tai lieu"))?;
+        .ok_or_else(|| anyhow::anyhow!("Document not found"))?;
     entry.name = new_name;
     entry.updated_at = now_secs();
     save_index(&dir, &index)
@@ -113,7 +113,7 @@ pub fn toggle_pin_document(dir: String, id: String) -> anyhow::Result<bool> {
         .entries
         .iter_mut()
         .find(|e| e.id == id)
-        .ok_or_else(|| anyhow::anyhow!("Khong tim thay tai lieu"))?;
+        .ok_or_else(|| anyhow::anyhow!("Document not found"))?;
     entry.pinned = !entry.pinned;
     let pinned = entry.pinned;
     save_index(&dir, &index)?;
@@ -127,7 +127,7 @@ pub fn delete_document_entry(dir: String, id: String) -> anyhow::Result<()> {
         .iter()
         .find(|e| e.id == id)
         .cloned()
-        .ok_or_else(|| anyhow::anyhow!("Khong tim thay tai lieu"))?;
+        .ok_or_else(|| anyhow::anyhow!("Document not found"))?;
     index.entries.retain(|e| e.id != id);
     save_index(&dir, &index)?;
 

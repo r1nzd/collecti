@@ -1,4 +1,6 @@
 pub mod documents;
+pub mod folders;
+pub mod settings;
 use crate::io::{self, DocKind};
 use crate::model::{Cell, CellRef, CellValue, Workbook};
 use crate::engines::formula;
@@ -85,7 +87,7 @@ fn cell_snapshot(row: u32, col: u32, cell: &Cell) -> CellSnapshot {
         CellValue::Number(n) => (format_number(*n), false),
         CellValue::Text(t) => (t.clone(), false),
         CellValue::Boolean(b) => ((if *b { "TRUE" } else { "FALSE" }).to_string(), false),
-        CellValue::Error(e) => (format!("#LOI: {e}"), true),
+        CellValue::Error(e) => (format!("#ERROR: {e}"), true),
     };
     CellSnapshot { row, col, display, is_error }
 }
@@ -131,7 +133,7 @@ pub fn open_workbook(path: String) -> anyhow::Result<()> {
     let mut wb = if p.exists() {
         let manifest = io::read_manifest(p)?;
         if manifest.kind != DocKind::Table {
-            anyhow::bail!("Tep khong phai bang tinh");
+            anyhow::bail!("File is not a spreadsheet");
         }
         let bytes = io::read_content(p)?;
         if bytes.as_slice() == b"{}" {

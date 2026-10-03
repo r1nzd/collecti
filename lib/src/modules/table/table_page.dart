@@ -35,7 +35,7 @@ class _TablePageState extends State<TablePage> {
       try {
         await openWorkbook(path: path);
       } catch (e) {
-        _showMessage('Không mở được bảng tính: $e');
+        _showMessage('Could not open spreadsheet: $e');
       }
     }
     await _loadSnapshot();
@@ -89,7 +89,7 @@ class _TablePageState extends State<TablePage> {
       try {
         await saveWorkbook(path: path);
       } catch (e) {
-        _showMessage('Không lưu được bảng tính: $e');
+        _showMessage('Could not save spreadsheet: $e');
       }
     }
   }

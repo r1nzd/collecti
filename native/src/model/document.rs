@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -12,9 +13,22 @@ pub struct DocumentEntry {
     pub updated_at: u64,
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct FolderEntry {
+    pub id: String,
+    pub name: String,
+    pub ext: String,
+    pub created_at: u64,
+    pub updated_at: u64,
+}
+
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct DocumentIndex {
     pub entries: Vec<DocumentEntry>,
+    #[serde(default)]
+    pub folders: Vec<FolderEntry>,
+    #[serde(default)]
+    pub folder_of: HashMap<String, String>,
 }
 
 fn index_path(dir: &str) -> PathBuf {
@@ -70,6 +84,42 @@ mod tests {
         let loaded = load_index(&dir_str).unwrap();
         assert_eq!(loaded.entries.len(), 1);
         assert_eq!(loaded.entries[0].name, "Bao cao");
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn loads_legacy_index_without_folders() {
+        let dir = std::env::temp_dir().join("collecti_doc_index_test_legacy");
+        let dir_str = dir.to_str().unwrap().to_string();
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        fs::write(index_path(&dir_str), br#"{"entries":[]}"#).unwrap();
+        let loaded = load_index(&dir_str).unwrap();
+        assert!(loaded.entries.is_empty());
+        assert!(loaded.folders.is_empty());
+        assert!(loaded.folder_of.is_empty());
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn roundtrip_folders_and_links() {
+        let dir = std::env::temp_dir().join("collecti_doc_index_test_folders");
+        let dir_str = dir.to_str().unwrap().to_string();
+        let _ = fs::remove_dir_all(&dir);
+        let mut index = DocumentIndex::default();
+        index.folders.push(FolderEntry {
+            id: "f1".to_string(),
+            name: "Work".to_string(),
+            ext: "awce".to_string(),
+            created_at: 1,
+            updated_at: 1,
+        });
+        index.folder_of.insert("d1".to_string(), "f1".to_string());
+        save_index(&dir_str, &index).unwrap();
+        let loaded = load_index(&dir_str).unwrap();
+        assert_eq!(loaded.folders.len(), 1);
+        assert_eq!(loaded.folders[0].name, "Work");
+        assert_eq!(loaded.folder_of.get("d1").map(String::as_str), Some("f1"));
         let _ = fs::remove_dir_all(&dir);
     }
 }

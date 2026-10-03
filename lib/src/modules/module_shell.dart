@@ -38,7 +38,7 @@ class ModuleShell extends StatelessWidget {
             children: [
               IconButton(
                 icon: const Icon(Icons.arrow_back),
-                tooltip: 'Quay lại',
+                tooltip: 'Back',
                 onPressed: onClose,
               ),
               const SizedBox(width: 4),

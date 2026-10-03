@@ -86,7 +86,7 @@ fn read_entry(path: &Path, name: &str) -> Result<Vec<u8>> {
 pub fn read_manifest(path: &Path) -> Result<Manifest> {
     let m: Manifest = serde_json::from_slice(&read_entry(path, "manifest.json")?)?;
     if m.format_version > FORMAT_VERSION {
-        bail!("format_version {} mới hơn bản hiện tại", m.format_version);
+        bail!("format_version {} is newer than this version", m.format_version);
     }
     Ok(m)
 }

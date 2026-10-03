@@ -5,6 +5,8 @@
 
 import 'api.dart';
 import 'api/documents.dart';
+import 'api/folders.dart';
+import 'api/settings.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi' as ffi;
@@ -27,7 +29,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String dco_decode_String(dynamic raw);
 
   @protected
+  AppSettings dco_decode_app_settings(dynamic raw);
+
+  @protected
   bool dco_decode_bool(dynamic raw);
+
+  @protected
+  AppSettings dco_decode_box_autoadd_app_settings(dynamic raw);
 
   @protected
   CellSnapshot dco_decode_cell_snapshot(dynamic raw);
@@ -39,6 +47,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   DocumentEntry dco_decode_document_entry(dynamic raw);
 
   @protected
+  DocumentFolderLink dco_decode_document_folder_link(dynamic raw);
+
+  @protected
+  FolderEntry dco_decode_folder_entry(dynamic raw);
+
+  @protected
   int dco_decode_i_32(dynamic raw);
 
   @protected
@@ -48,7 +62,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<DocumentEntry> dco_decode_list_document_entry(dynamic raw);
 
   @protected
+  List<DocumentFolderLink> dco_decode_list_document_folder_link(dynamic raw);
+
+  @protected
+  List<FolderEntry> dco_decode_list_folder_entry(dynamic raw);
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
+
+  @protected
+  String? dco_decode_opt_String(dynamic raw);
 
   @protected
   int dco_decode_u_32(dynamic raw);
@@ -69,7 +92,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
+  AppSettings sse_decode_app_settings(SseDeserializer deserializer);
+
+  @protected
   bool sse_decode_bool(SseDeserializer deserializer);
+
+  @protected
+  AppSettings sse_decode_box_autoadd_app_settings(SseDeserializer deserializer);
 
   @protected
   CellSnapshot sse_decode_cell_snapshot(SseDeserializer deserializer);
@@ -79,6 +108,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   DocumentEntry sse_decode_document_entry(SseDeserializer deserializer);
+
+  @protected
+  DocumentFolderLink sse_decode_document_folder_link(
+      SseDeserializer deserializer);
+
+  @protected
+  FolderEntry sse_decode_folder_entry(SseDeserializer deserializer);
 
   @protected
   int sse_decode_i_32(SseDeserializer deserializer);
@@ -92,7 +128,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       SseDeserializer deserializer);
 
   @protected
+  List<DocumentFolderLink> sse_decode_list_document_folder_link(
+      SseDeserializer deserializer);
+
+  @protected
+  List<FolderEntry> sse_decode_list_folder_entry(SseDeserializer deserializer);
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
+
+  @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_32(SseDeserializer deserializer);
@@ -114,7 +160,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
+  void sse_encode_app_settings(AppSettings self, SseSerializer serializer);
+
+  @protected
   void sse_encode_bool(bool self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_app_settings(
+      AppSettings self, SseSerializer serializer);
 
   @protected
   void sse_encode_cell_snapshot(CellSnapshot self, SseSerializer serializer);
@@ -124,6 +177,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_document_entry(DocumentEntry self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_document_folder_link(
+      DocumentFolderLink self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_folder_entry(FolderEntry self, SseSerializer serializer);
 
   @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
@@ -137,8 +197,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       List<DocumentEntry> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_document_folder_link(
+      List<DocumentFolderLink> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_folder_entry(
+      List<FolderEntry> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_prim_u_8_strict(
       Uint8List self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_String(String? self, SseSerializer serializer);
 
   @protected
   void sse_encode_u_32(int self, SseSerializer serializer);
