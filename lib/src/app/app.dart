@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../modules/collecti_module.dart';
+import '../modules/home/home_page.dart';
 import 'theme.dart';
 
 class CollectiApp extends StatelessWidget {
@@ -17,45 +18,67 @@ class CollectiApp extends StatelessWidget {
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
+
   @override
   State<HomeShell> createState() => _HomeShellState();
 }
 
 class _HomeShellState extends State<HomeShell> {
   int _index = 0;
+  bool _expanded = false;
+
   static const _mods = CollectiModule.values;
+
+  void _openModule(CollectiModule module) {
+    setState(() => _index = module.index + 1);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final wide = MediaQuery.sizeOf(context).width >= 720;
-    final body = IndexedStack(index: _index, children: [for (final m in _mods) m.page]);
+    final scheme = Theme.of(context).colorScheme;
+    final pages = <Widget>[
+      HomePage(onOpenModule: _openModule),
+      for (final m in _mods) m.page,
+    ];
+
     return Scaffold(
-      body: wide
-          ? Row(children: [
-              NavigationRail(
-                selectedIndex: _index,
-                labelType: NavigationRailLabelType.all,
-                onDestinationSelected: (i) => setState(() => _index = i),
-                destinations: [
-                  for (final m in _mods)
-                    NavigationRailDestination(
-                        icon: Icon(m.icon), selectedIcon: Icon(m.selectedIcon), label: Text(m.label)),
-                ],
+      body: Row(
+        children: [
+          NavigationRail(
+            extended: _expanded,
+            minWidth: 96,
+            minExtendedWidth: 220,
+            backgroundColor: scheme.surfaceContainer,
+            selectedIndex: _index,
+            labelType: _expanded ? NavigationRailLabelType.none : NavigationRailLabelType.all,
+            onDestinationSelected: (i) => setState(() {
+              _index = i;
+              _expanded = false;
+            }),
+            leading: Padding(
+              padding: const EdgeInsets.only(top: 12, bottom: 12),
+              child: IconButton(
+                icon: Icon(_expanded ? Icons.menu_open : Icons.menu),
+                onPressed: () => setState(() => _expanded = !_expanded),
               ),
-              const VerticalDivider(width: 1),
-              Expanded(child: body),
-            ])
-          : body,
-      bottomNavigationBar: wide
-          ? null
-          : NavigationBar(
-              selectedIndex: _index,
-              onDestinationSelected: (i) => setState(() => _index = i),
-              destinations: [
-                for (final m in _mods)
-                  NavigationDestination(icon: Icon(m.icon), selectedIcon: Icon(m.selectedIcon), label: m.label),
-              ],
             ),
+            destinations: [
+              const NavigationRailDestination(
+                icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(Icons.home),
+                label: Text('Home'),
+              ),
+              for (final m in _mods)
+                NavigationRailDestination(
+                  icon: Icon(m.icon),
+                  selectedIcon: Icon(m.selectedIcon),
+                  label: Text(m.label),
+                ),
+            ],
+          ),
+          Expanded(child: IndexedStack(index: _index, children: pages)),
+        ],
+      ),
     );
   }
 }
