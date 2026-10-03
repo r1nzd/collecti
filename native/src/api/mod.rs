@@ -126,3 +126,56 @@ pub fn get_cell_input(sheet_index: u32, row: u32, col: u32) -> String {
         })
     })
 }
+pub fn open_workbook(path: String) -> anyhow::Result<()> {
+    let p = Path::new(&path);
+    let mut wb = if p.exists() {
+        let manifest = io::read_manifest(p)?;
+        if manifest.kind != DocKind::Table {
+            anyhow::bail!("Tep khong phai bang tinh");
+        }
+        let bytes = io::read_content(p)?;
+        if bytes.as_slice() == b"{}" {
+            Workbook::new()
+        } else {
+            serde_json::from_slice::<Workbook>(&bytes)?
+        }
+    } else {
+        Workbook::new()
+    };
+    if wb.sheets.is_empty() {
+        wb.sheets.push(crate::model::Sheet::new("Sheet1"));
+    }
+    *WORKBOOK.lock().unwrap() = Some(wb);
+    Ok(())
+}
+
+pub fn save_workbook(path: String) -> anyhow::Result<()> {
+    let bytes = with_workbook(|wb| serde_json::to_vec(wb))?;
+    io::write_container(Path::new(&path), DocKind::Table, &bytes)
+}
+
+#[cfg(test)]
+mod workbook_io_tests {
+    use super::*;
+
+    #[test]
+    fn save_and_open_roundtrip() {
+        let dir = std::env::temp_dir().join("collecti_workbook_io_test");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("sample.atce").to_str().unwrap().to_string();
+
+        open_workbook(path.clone()).unwrap();
+        set_cell_input(0, 0, 0, "7".to_string());
+        set_cell_input(0, 1, 0, "=A1*2".to_string());
+        save_workbook(path.clone()).unwrap();
+
+        *WORKBOOK.lock().unwrap() = None;
+        open_workbook(path.clone()).unwrap();
+        assert_eq!(get_cell_input(0, 1, 0), "=A1*2");
+        let snapshot = get_sheet_snapshot(0);
+        assert!(snapshot.iter().any(|c| c.row == 1 && c.col == 0 && c.display == "14"));
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+}
